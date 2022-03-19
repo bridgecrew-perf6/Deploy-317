@@ -19,7 +19,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
 import plotly.express as px
-
+import gunicorn
 
 # In[3]:
 
@@ -966,7 +966,7 @@ del app.config._read_only["requests_pathname_prefix"]
 
 # E. run app in server
 
-app.run_server(port = 8061, debug=False)
+#app.run_server(port = 8061, debug=False)
 
 
 # In[30]:
