@@ -53,7 +53,7 @@ from dash.exceptions import PreventUpdate
 #option A: if you ran the code above in its entirety, just continue.
 #option B: store the file MM_dumies in your directory and load with the following command:
 
-MM = pd.read_csv("MM_dummies8.csv")
+MM = pd.read_csv("MM_Dummies8.csv")
 
 
 # In[12]:
