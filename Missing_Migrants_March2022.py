@@ -32,7 +32,6 @@ d = lambda x: pd.datetime.strptime(x, '%d-%b-%y')
 
 # To create dashboard
 import dash
-from jupyter_dash import JupyterDash
 from dash import Dash, callback, dash_table, dcc, html, Input, Output, State, ALL 
 import dash_bootstrap_components as dbc
 
