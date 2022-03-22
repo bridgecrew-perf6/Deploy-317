@@ -4,6 +4,10 @@
 # # Missing Migrants Project
 
 # ## Importing libraries and adjusting other settings
+
+# In[1]:
+
+
 #If you haven't done it, please install:
 #!pip install plotly
 #!pip install numpy 
@@ -11,15 +15,20 @@
 #!pip install numpy
 #!pip install dash
 #!pip install dash-bootstrap-components
+get_ipython().system('pip install gunicorn')
 
 
 # In[2]:
+
+
 # To manipulate the dataframe
 import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
 import plotly.express as px
 import gunicorn
+from statsmodels.tsa.seasonal import seasonal_decompose
+
 
 # In[3]:
 
@@ -31,8 +40,11 @@ d = lambda x: pd.datetime.strptime(x, '%d-%b-%y')
 
 
 # In[4]:
+
+
 # To create dashboard
 import dash
+from jupyter_dash import JupyterDash
 from dash import Dash, callback, dash_table, dcc, html, Input, Output, State, ALL 
 import dash_bootstrap_components as dbc
 
@@ -44,19 +56,51 @@ import collections
 from dash.exceptions import PreventUpdate
 
 
+# In[6]:
+
+
+import plotly.graph_objects as go
+import plotly.io as pio
+
+
 # # Creating a dashboard with Dash
 
-# In[6]:
+# In[7]:
 
 
 # A. Load the data 
 #option A: if you ran the code above in its entirety, just continue.
 #option B: store the file MM_dumies in your directory and load with the following command:
 
-MM = pd.read_csv("MM_Dummies8.csv")
+MM = pd.read_csv("MM_dummies8.csv")
 
 
-# In[12]:
+# In[8]:
+
+
+dt_list = []
+index = 0
+month_key = {"January": "01",
+            "February": "02",
+            "March" : "03",
+            "April" : "04",
+            "May": "05",
+            "June": "06",
+            "July": "07",
+            "August": "08",
+            "September": "09",
+            "October": "10",
+            "November": "11",
+            "December": "12"}
+
+for i in MM['Reported_Year']:
+    dt_list.append(str(MM['Reported_Year'][index])+ '-' + month_key[str(MM["Reported_Month"][index])]+ '-' + "01")
+    index = index + 1
+    
+MM['Date'] = pd.to_datetime(dt_list)
+
+
+# In[9]:
 
 
 # B. Determining the different menus 
@@ -84,16 +128,15 @@ col_options_Route = sorted(col_options_Route, key=itemgetter('label'), reverse=F
 col_options_Route.insert(0, {'label': 'All', 'value': 'All'})
 
 
-# In[13]:
+# In[10]:
 
 
 # C. Building app Layout 
-app = Dash(__name__, external_stylesheets = [dbc.themes.LUX],
+app = Dash(__name__, external_stylesheets = [dbc.themes.FLATLY],
                   meta_tags = [{'name' : 'viewport',
                                'content' : 'width-device-width, initial-scale=1.0'}]
                   )
 server = app.server
-
 
 app.layout = dbc.Container([
     
@@ -106,7 +149,7 @@ app.layout = dbc.Container([
                 dbc.Row(
                     [
                         dbc.Col(html.H1("Visualizing Missing Migrants",
-                                       className = 'text-primary, mb-4',
+                                        className = 'text-primary, mb-4',
                                         style ={'color': '#0099C6', "text-align": "center",
                                                 "font-weight": "bold"}),
                                 
@@ -208,24 +251,13 @@ app.layout = dbc.Container([
                     [
                         dbc.Col(html.H3("Dead and Missing Migrants by Incident",
                                        style ={"text-align": "center"}),
-                                    #width = {"size": 5, "offset": 0},
-                                     xs = 12, sm = 12, md = 12, lg = 12, xl = 12),
+                                       
+                                       xs = 12, sm = 12, md = 12, lg = 12, xl = 12),
                     ], 
                         justify = 'center',
         
                        ),
-                dbc.Row(               
-                    [dbc.Col(dbc.Button(html.Pre(id = "web_link", children = []), 
-                                    color='info'), 
-                                    #width = {"size": 5, "offset": 0}),
-                                    xs = 12, sm = 12, md = 12, lg = 12, xl = 12),
-                
-                                   ], 
-                        justify = 'left',
-        
-                       ),
                        
-                
                 dbc.Row(children = [dbc.Col(html.Div(
                                     dcc.Graph(id = "fig1", figure = {})),
                                     width = {"size": 'auto', "offset": 0},),
@@ -236,6 +268,16 @@ app.layout = dbc.Container([
                         
                         ),
 
+                dbc.Row([dbc.Col(dbc.Button(html.Pre(id = "web_link", children = []), 
+                                    color='info',
+                                    size = 'lg'), 
+                                    width = {"size": 6, "offset": 3},
+                                    xs = 12, sm = 12, md = 12, lg = 12, xl = 12),
+                
+                                   ], 
+                        justify = 'middle',
+        
+                       ),
     
                     dbc.Row(
                     [
@@ -359,29 +401,75 @@ app.layout = dbc.Container([
                 dbc.Row([dbc.Col(html.Br())]), 
     
 #Download button
-#      dbc.Row(
+     dbc.Row(
                     
-#        [html.Button("Download Selected Data", id="btn_dta"), dcc.Download(id="download_csv")],
-#        justify = 'center'),
+       [html.Button("Download Selected Data", id="btn_dta"), dcc.Download(id="download_csv")],
+       justify = 'center'),
     
-#                 dbc.Row([dbc.Col(html.Br())]), 
+                dbc.Row([dbc.Col(html.Br())]), 
     
-#      dbc.Row(
-#                     [
-#                         dbc.Col(html.Div("Once you have clicked this button, please hit refresh before doing a new search.",
-#                                        style ={"text-align": "center", "color": '#808080'}),
-#                                      xs = 4, sm = 4, md = 4, lg = 4, xl = 4),
-#                     ], 
-#                         justify = 'center',
-#                     ),
+     dbc.Row(
+                    [
+                        dbc.Col(html.Div("Once you have clicked this button, please hit refresh before doing a new search.",
+                                       style ={"text-align": "center", "color": '#808080'}),
+                                     xs = 4, sm = 4, md = 4, lg = 4, xl = 4),
+                    ], 
+                        justify = 'center',
+                    ),
     
 
-#                 dbc.Row([dbc.Col(html.Br())]), 
-#                 dbc.Row([dbc.Col(html.Br())]),                        
+                dbc.Row([dbc.Col(html.Br())]), 
+                dbc.Row([dbc.Col(html.Br())]), 
+   
+    dbc.Row(
+                [
+                    dbc.Col(html.H2("Custom Forecasting (Coming April, 2022)",
+                                    className = 'text-primary, mb-4',
+                                    style ={'color': '#0099C6', "text-align": "center",
+                                            "font-weight": "bold"}),
+
+                           #width = {"size": 6, "offset":0},
+                            xs = 12, sm = 12, md = 12, lg = 12, xl = 12
+                           ),
+                ],
+                justify = 'center',
+            ),
+    
+    dbc.Row(
+            [
+                dbc.Col(html.H4("Detected Seasonality in Selected Data", 
+                                style ={"text-align": "center"}),
+                       #width = {"size": 6, "offset": 0},
+                       xs = 12, sm = 12, md = 12, lg = 12, xl = 12
+                       ),
+            ],
+            justify = 'center',
+        ),
+    
+   dbc.Row(
+        [
+            dbc.Col(html.H6("Seasonality drawn from an ETS decomposition", 
+                            style ={"text-align": "center"}),
+                   #width = {"size": 6, "offset": 0},
+                   xs = 12, sm = 12, md = 12, lg = 12, xl = 12
+                   ),
+        ],
+        justify = 'center',
+    ),
+
+    
+    
+    dbc.Row(children = [dbc.Col(html.Div(
+                                    dcc.Graph(id = "fig9", figure = {})),
+                                    width = {"size": 'auto', "offset": 0},),
+                                    #xs = 12, sm = 12, md = 12, lg = 12, xl = 12), 
+                                   ],
+        
+                        justify = 'around'), 
 ], fluid = True)
 
 
-# In[14]:
+# In[11]:
 
 
 #Storing data
@@ -423,13 +511,13 @@ def filter(Reported_Year, Country, Region, COD, Migration_Route):
     return MM_Route.to_dict("records")
 
 
-# In[15]:
+# In[12]:
 
 
 # D. Defining callbacks to update the graphs
 
 
-# In[16]:
+# In[13]:
 
 
 #D.0 Counting the number of incidents corresponding to the filtered data
@@ -462,7 +550,13 @@ def callback(data):
         return """No content"""
 
 
-# In[17]:
+# In[14]:
+
+
+MM.columns
+
+
+# In[15]:
 
 
 # D.1 Map with all incidents
@@ -502,48 +596,48 @@ def callback(Reported_Year,Country, Region, COD, Migration_Route):
             MM_COD,
             lat="Latitude", 
             lon="Longitude",
-            text = None,
+            #ext = ['URL1'],
             #hover_name="Cause_of_Death", 
-            hover_data = ['Number_Dead'], #{"Log_Dead":False,"Latitude":False,"Longitude":False,"Migration_Route":False,"Number_Dead":True,"Minimum_Missing":True, "Reported_Year":True}, 
-            size = None, #"Log_Dead"
-            #custom_data = ["URL1"],
+            hover_data = {"Total_Dead_and_Missing":False,"Latitude":False,"Longitude":False,"Migration_Route":False,"Number_Dead":True,"Minimum_Missing":True, "Reported_Year":True}, 
+            custom_data = ["URL1"],
             mapbox_style ="open-street-map",
-            zoom=1,
+            zoom=2,
+            #title = 'Map of the Missing',
             opacity = .5,
             height=800,
-            width =1900,
+            width=1200,
             color="Migration_Route",
-            color_discrete_sequence=px.colors.sequential.RdBu).update_layout({"plot_bgcolor":"rgba(0, 0, 0, 0)",
+            color_discrete_sequence=px.colors.sequential.Inferno).update_layout({"plot_bgcolor":"rgba(0, 0, 0, 0)",
                                                                               "paper_bgcolor": "rgba(0, 0, 0, 0)"},
                                                                             legend=dict(yanchor="bottom", y=0.01,
                                                                                                    xanchor="left", x=0.01,
                                                                                                   title = "Migration Route"))
-    except: 
-        return px.scatter().update_layout({"plot_bgcolor":"rgba(0, 0, 0, 0)","paper_bgcolor": "rgba(0, 0, 0, 0)"})
+    except:
+        return px.pie().update_layout({"plot_bgcolor":"rgba(0, 0, 0, 0)","paper_bgcolor": "rgba(0, 0, 0, 0)"})
 
 
-# In[18]:
+# In[16]:
 
 
-# #D.2 button that shows link for selected point in scatterplot map
-# @app.callback(
-#     Output('web_link', "children"),
-#     [Input("fig1", 'clickData')])
+#D.2 button that shows link for selected point in scatterplot map
+@app.callback(
+    Output('web_link', "children"),
+    [Input("fig1", 'clickData')])
 
-# def display_click_data(clickData):
-#     if clickData is None:
-#         return ("Click on a bubble to get the associated news article")
-#     else:
-#         print(clickData["points"][0]["customdata"][0])
-#         the_link = clickData['points'][0]['customdata'][0]
-#         the_link = the_link.split(",")
-#         if the_link is None:
-#             return 'No Article Available'
-#         else:
-#             return html.A(the_link, href=the_link[0], target = "_blank")
+def display_click_data(clickData):
+    if clickData is None:
+        return ("Click on a bubble to get the associated news article")
+    else:
+        print(clickData["points"][0]["customdata"][0])
+        the_link = clickData['points'][0]['customdata'][0]
+        the_link = the_link.split(",")
+        if the_link is None:
+            return 'No Article Available'
+        else:
+            return html.A(the_link, href=the_link[0], target = "_blank")
 
 
-# In[19]:
+# In[17]:
 
 
 # D.4 Time series with dead and missing per month
@@ -598,7 +692,7 @@ def callback(Reported_Year, Region, Country, COD, Migration_Route):
         return px.bar().update_layout({"plot_bgcolor":"rgba(0, 0, 0, 0)","paper_bgcolor": "rgba(0, 0, 0, 0)"})
 
 
-# In[20]:
+# In[18]:
 
 
 # D.3 Bar chart with deaths per year
@@ -650,7 +744,7 @@ def callback(Reported_Year, Region, Country, COD, Migration_Route):
         return px.bar().update_layout({"plot_bgcolor":"rgba(0, 0, 0, 0)","paper_bgcolor": "rgba(0, 0, 0, 0)"})
 
 
-# In[21]:
+# In[19]:
 
 
 # D.4 Bar chart with number of incidents by COD
@@ -702,24 +796,17 @@ def callback(Reported_Year, Region, Country, COD, Migration_Route):
                      width = 750,
                      orientation = "h",
                      color="Incident_Count",
-                     color_continuous_scale='RdBu').update_layout({"plot_bgcolor":"rgba(0, 0, 0, 0)",
+                     color_continuous_scale='YlOrRd').update_layout({"plot_bgcolor":"rgba(0, 0, 0, 0)",
                                                                   "paper_bgcolor": "rgba(0, 0, 0, 0)"},
                                                                   xaxis_tickangle=-90,
                                                                   xaxis_title= "Cause of Death",
                                                                   yaxis_title = "Number of Incidents")
    
    except:
-       
        return px.bar().update_layout({"plot_bgcolor":"rgba(0, 0, 0, 0)","paper_bgcolor": "rgba(0, 0, 0, 0)"})
 
 
-# In[22]:
-
-
-MM.columns
-
-
-# In[23]:
+# In[20]:
 
 
 # D.5 Pie Chart: number of deaths per region
@@ -767,7 +854,7 @@ def callback(Reported_Year, Region, Country, COD, Migration_Route):
     
 
 
-# In[24]:
+# In[21]:
 
 
 # D.6 Treemap: number of deaths by country
@@ -812,16 +899,17 @@ def callback(Reported_Year, Region, Country, COD, Migration_Route):
                  values='Total_Dead_and_Missing',
                  labels = ['Country', 'Total_Dead_and_Missing'],
                  height=500,
-                 width =1900,
+                 width =1500,
                  color = "Total_Dead_and_Missing",
-                 color_continuous_scale='RdBu')
+                 color_continuous_scale='YlOrRd',
+                 color_continuous_midpoint = None)
 
     except:
         
         return px.treemap().update_layout({"plot_bgcolor":"rgba(0, 0, 0, 0)","paper_bgcolor": "rgba(0, 0, 0, 0)"})
 
 
-# In[25]:
+# In[22]:
 
 
 # D.7 Pie Chart: number of deaths by sex
@@ -877,7 +965,7 @@ def callback(Reported_Year, Region, Country, COD, Migration_Route):
         return px.pie().update_layout({"plot_bgcolor":"rgba(0, 0, 0, 0)","paper_bgcolor": "rgba(0, 0, 0, 0)"})
 
 
-# In[26]:
+# In[23]:
 
 
 # D.8 Pie Chart: number of deaths by age
@@ -935,7 +1023,7 @@ def callback(Reported_Year, Region, Country, COD, Migration_Route):
         return px.pie().update_layout({"plot_bgcolor":"rgba(0, 0, 0, 0)","paper_bgcolor": "rgba(0, 0, 0, 0)"})
 
 
-# In[27]:
+# In[24]:
 
 
 #D9 Download csv file with selected data
@@ -955,21 +1043,107 @@ def callback(n_clicks, data):
         return dict(content = MM_download.iloc[0:, 0:20].to_csv(), filename = "Missing_Migrants.csv")
 
 
-# In[28]:
+# In[25]:
+
+
+# D.10 Seasonal Decomp
+@app.callback(Output('fig9', 'figure'), 
+              Input('Reported_Year', 'value'),
+              Input('Region', 'value'), 
+              Input('Country', 'value'),
+              Input('COD', 'value'), 
+              Input('Migration_Route', 'value'))
+
+def callback(Reported_Year, Region, Country, COD, Migration_Route):
+    
+    try:
+        if Reported_Year != "All":
+            MM_Year = MM.query("Reported_Year == @Reported_Year")
+        else:
+            MM_Year = MM
+
+        if Region != "All":
+            MM_Region = MM_Year.query("Region == @Region")
+        else:
+            MM_Region = MM_Year
+            
+        if Country != "All":
+            MM_Country = MM_Region.query("Country == @Country")
+        else:
+            MM_Country = MM_Region
+            
+        if Migration_Route != "All":
+            MM_Route = MM_Country.query("Migration_Route == @Migration_Route")
+        else:
+            MM_Route = MM_Country
+
+        if COD != "All":
+            MM_COD = MM_Route.loc[MM_Route[COD]==1]
+        else:
+            MM_COD = MM_Route
+            
+        MM_COD["Reported_Date"] = pd.to_datetime(MM_COD["Reported_Date"])
+        MM_date = MM_COD.set_index("Reported_Date")
+        MM_month = MM_date.resample("M").sum()
+        MM_month.index.freq = "M"
+        result = seasonal_decompose(MM_month['Total_Dead_and_Missing'], model = 'add')
+        
+        return px.line(result.seasonal)
+    
+
+    except:
+        
+        return px.bar().update_layout({"plot_bgcolor":"rgba(0, 0, 0, 0)","paper_bgcolor": "rgba(0, 0, 0, 0)"})
+        
+        #return MM_COD.groupby(['Date'])['Total_Dead_and_Missing'].sum().plot()
+
+
+# In[26]:
 
 
 del app.config._read_only["requests_pathname_prefix"]
 
 
+# In[27]:
+
+
+import matplotlib.pyplot as plt
+
+
+# In[28]:
+
+
+# df = MM
+# df["Reported_Date"] = pd.to_datetime(MM["Reported_Date"])
+# MM_date = MM.set_index("Reported_Date")
+# MM_month = MM_date.resample("M").sum()
+# MM_month.index.freq = "M"
+# result = seasonal_decompose(MM_month['Total_Dead_and_Missing'], model = 'add')
+# result.plot();
+
+
 # In[29]:
+
+
+#MM.groupby(['Date'])['Total_Dead_and_Missing'].sum().plot()
+
+
+# In[30]:
+
+
+# result = seasonal_decompose(MM_COD, model = 'multi')
+# result.plot();
+
+
+# In[ ]:
 
 
 # E. run app in server
 
-#app.run_server(port = 8061, debug=False)
+app.run_server(port = 8066, debug=False)
 
 
-# In[30]:
+# In[ ]:
 
 
 '''
