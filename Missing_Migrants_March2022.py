@@ -1072,15 +1072,10 @@ def callback(Reported_Year, Region, Country, COD, Migration_Route):
 del app.config._read_only["requests_pathname_prefix"]
 
 
-# In[27]:
-
-
-import matplotlib.pyplot as plt
-
 
 # E. run app in server
 
-app.run_server(port = 8066, debug=False)
+app.run_server(port = 8051, debug=False)
 
 
 # In[ ]:
