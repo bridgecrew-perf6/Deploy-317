@@ -45,7 +45,7 @@ import plotly.io as pio
 
 # # Creating a dashboard with Dash
 
-MM = pd.read_csv("MM_dummies8.csv")
+MM = pd.read_csv("MM_Dummies8.csv")
 
 dt_list = []
 index = 0
