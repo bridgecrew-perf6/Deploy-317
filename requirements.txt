@@ -31,4 +31,3 @@ statsmodels==0.13.2
 tenacity==8.0.1
 Werkzeug==2.0.3
 gunicorn
-pandas.compat
