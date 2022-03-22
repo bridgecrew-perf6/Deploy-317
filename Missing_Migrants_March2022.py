@@ -15,11 +15,6 @@
 #!pip install numpy
 #!pip install dash
 #!pip install dash-bootstrap-components
-get_ipython().system('pip install gunicorn')
-
-
-# In[2]:
-
 
 # To manipulate the dataframe
 import pandas as pd
@@ -29,17 +24,10 @@ import plotly.express as px
 import gunicorn
 from statsmodels.tsa.seasonal import seasonal_decompose
 
-
-# In[3]:
-
-
 # To use dates
 import datetime
 # Date parser to pass to read_csv
 d = lambda x: pd.datetime.strptime(x, '%d-%b-%y')
-
-
-# In[4]:
 
 
 # To create dashboard
@@ -48,16 +36,8 @@ from jupyter_dash import JupyterDash
 from dash import Dash, callback, dash_table, dcc, html, Input, Output, State, ALL 
 import dash_bootstrap_components as dbc
 
-
-# In[5]:
-
-
 import collections
 from dash.exceptions import PreventUpdate
-
-
-# In[6]:
-
 
 import plotly.graph_objects as go
 import plotly.io as pio
@@ -65,18 +45,7 @@ import plotly.io as pio
 
 # # Creating a dashboard with Dash
 
-# In[7]:
-
-
-# A. Load the data 
-#option A: if you ran the code above in its entirety, just continue.
-#option B: store the file MM_dumies in your directory and load with the following command:
-
 MM = pd.read_csv("MM_dummies8.csv")
-
-
-# In[8]:
-
 
 dt_list = []
 index = 0
@@ -1108,34 +1077,6 @@ del app.config._read_only["requests_pathname_prefix"]
 
 
 import matplotlib.pyplot as plt
-
-
-# In[28]:
-
-
-# df = MM
-# df["Reported_Date"] = pd.to_datetime(MM["Reported_Date"])
-# MM_date = MM.set_index("Reported_Date")
-# MM_month = MM_date.resample("M").sum()
-# MM_month.index.freq = "M"
-# result = seasonal_decompose(MM_month['Total_Dead_and_Missing'], model = 'add')
-# result.plot();
-
-
-# In[29]:
-
-
-#MM.groupby(['Date'])['Total_Dead_and_Missing'].sum().plot()
-
-
-# In[30]:
-
-
-# result = seasonal_decompose(MM_COD, model = 'multi')
-# result.plot();
-
-
-# In[ ]:
 
 
 # E. run app in server
