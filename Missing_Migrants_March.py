@@ -1075,7 +1075,7 @@ del app.config._read_only["requests_pathname_prefix"]
 
 # E. run app in server
 
-app.run_server(port = 8051, debug=False)
+#app.run_server(port = 8051, debug=False)
 
 
 # In[ ]:
